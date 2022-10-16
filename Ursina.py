@@ -44,9 +44,6 @@ for o in range(2):
             boxes.append(box)
 
 
-
-
-
 sword = Entity(model='cube', texture='grass', rotation=(-30, -45),
                position=(0.25, -0.6), parent=camera.ui, scale=(0.2, 0.2))
 
@@ -120,5 +117,22 @@ def input(key):
             if key == 'left mouse down':
                 boxes.remove(box)
                 destroy(box)
+
+    if held_keys['left mouse']:
+        sword.position = (0.45, -0.5)
+    elif held_keys['right mouse']:
+        sword.position = (0.45, -0.5)
+    else:
+        sword.position = (0.5, -0.6)
+    if held_keys['t']:
+        chat_input.visible = True
+    if held_keys['enter']:
+        print(chat_input.text)
+        time.sleep(0.5)
+        if chat_input.text == '("forme":"sphere")':
+            print("true")
+        else:
+            txt_chat_info.text = 'Error'
+
 
 app.run()

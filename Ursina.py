@@ -76,21 +76,6 @@ def update():
         player.y = 1
         player.x = randint(0, map_size)
         player.z = randint(0, map_size)
-    if held_keys['left mouse']:
-        sword.position = (0.45, -0.5)
-    elif held_keys['right mouse']:
-        sword.position = (0.45, -0.5)
-    else:
-        sword.position = (0.5, -0.6)
-    if held_keys['t']:
-        chat_input.visible = True
-    if held_keys['enter']:
-        print(chat_input.text)
-        time.sleep(0.5)
-        if chat_input.text == '("forme":"sphere")':
-            print("true")
-        else:
-            txt_chat_info.text = 'Error'
 
     slider_x.value = player.x
     slider_y.value = player.y

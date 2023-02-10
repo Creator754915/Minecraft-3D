@@ -158,12 +158,11 @@ break_grass = Audio(
     autoplay=False
 )
 
-slider_x = ThinSlider(text="X: ", min=0, max=50, default=0, x=-.65, dynamic=True)
-slider_x.scale *= .75
-slider_y = ThinSlider(text="Y: ", min=0, max=50, default=0, x=-.65, y=-.04, dynamic=True)
-slider_y.scale *= .75
-slider_z = ThinSlider(text="Z: ", min=0, max=50, default=0, x=-.65, y=-.08, dynamic=True)
-slider_z.scale *= .75
+# Print X, Y and Z
+
+text_x = Text(text="X: ", scale=1, x=-.88, y=-.02)
+text_y = Text(text="Y: ", scale=1, x=-.88, y=-.06)
+text_z = Text(text="Z: ", scale=1, x=-.88, y=-.1)
 
 txt_chat_info = Text(text='', scale=2, color='#fc0000', x=-.85, y=-0.27)
 txt_save_code = Text(text='', scale=1.5, color='#fc0000', x=-.85, y=-0.37)
@@ -255,9 +254,9 @@ def update():
     if abs(pickup.x) > map_size:
         speed = speed * -1
 
-    slider_x.value = player.x
-    slider_y.value = player.y
-    slider_z.value = player.z
+    text_x.text = f"X: {player.x}"
+    text_y.text = f"Y: {player.y}"
+    text_z.text = f"Z:  {player.z}"
 
 
 speed = 1
@@ -329,7 +328,7 @@ def input(key):
 
     # admin option
 
-    if held_keys['l']:
+    if held_keys['l'] and held_keys['d']:
 
         print(boxes)
         print(bedrock)

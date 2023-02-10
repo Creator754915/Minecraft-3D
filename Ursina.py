@@ -1,12 +1,18 @@
+import random
 import time
 from random import randint, choice
+from tkinter import *
 from ursina import *
 from ursina import curve
 from ursina.prefabs.first_person_controller import FirstPersonController
+from ursina.prefabs.health_bar import HealthBar
 from ursina.shaders import basic_lighting_shader
 import numpy as np
+import pyttsx3
+
 
 app = Ursina()
+voice_robot = pyttsx3.init()
 window.borderless = False
 window.exit_button.enabled = False
 
@@ -130,13 +136,24 @@ def ignore():
 hand = Entity(model='cube', texture='hand', rotation=(-30, -45),
               position=(0.25, -0.6), parent=camera.ui, scale=(0.2, 0.2))
 
-pickup = Entity(model='sphere', position=(10, 1, 5))
+
+pickup = Entity(model='cube', position=(1, 1, 1), origin_y=0.5, parent=scene)
+pickup.collider = 'box'
+
+monster = Entity(model='sphere', color=color.green, texture='white_cube', origin_y=0.5)
+monster.add_script(SmoothFollow(target=player, offset=(0, 1, 0)))
 
 camera.z = 0
 tree()
 
 dead_punch = Audio(
     "assets\\dead_sound.mp3",
+    loop=False,
+    autoplay=False
+)
+
+break_grass = Audio(
+    "assets\\break_grass.mp3",
     loop=False,
     autoplay=False
 )
@@ -164,9 +181,38 @@ all_version = Button(
 
 all_version.on_click = ignore
 
+# Medkit
+sus = Entity()
+health = HealthBar(bar_color=color.rgb(0, 200, 0), roundness=.5)
+health.value -= 90
+
+
+class Medkit(Entity):
+    def __init__(self, **kwargs):
+        super().__init__(parent=sus, model='medkit', texture='medkit', rotation_x=180, rotation_z=180, scale=0.25, y=.5,
+                         **kwargs)
+        self.original_y = self.y
+
+    def update(self):
+        dist = distance_xz(player.position, self.position)
+        self.rotation_y += 2
+        self.y = (self.original_y + sin(self.rotation_y * 0.025) * self.scale_y * 0.175)
+        if dist < 1 and health.value < 100:
+            health.value += health.max_value - health.value
+            destroy(self)
+
+            def medrespawn():
+                global meds
+                meds = [Medkit(x=2 * 2) in range(1)]
+
+            invoke(medrespawn, delay=10)
+
+
+meds = [Medkit(x=2*2) in range(1)]
+
 number_of_particles = 1000   # keep this as low as possible
-points = np.array([Vec3(0,0,0) for i in range(number_of_particles)])
-directions = np.array([Vec3(random.random()-.5,random.random()-.5,random.random()-.5)*.05 for i in range(number_of_particles)])
+points = np.array([Vec3(0, 0, 0) for i in range(number_of_particles)])
+directions = np.array([Vec3(random.random()-.5, random.random()-.5, random.random()-.5)*.05 for i in range(number_of_particles)])
 frames = []
 
 # simulate the particles once and cache the positions in a list.
@@ -203,14 +249,18 @@ def update():
     if player.y == 15 or player.y > 149:
         player.y = 15
 
-    if not player.has_pickup and distance(player, pickup) < pickup.scale_x / 2:
-        player.has_pickup = True
-        pickup.animate_scale(0, duration=.1)
-        destroy(pickup, delay=.1)
+    global speed
+    pickup.color = color.rgb(0, randint(0, 51), randint(0, 255))
+    pickup.x = pickup.x + time.dt * speed
+    if abs(pickup.x) > map_size:
+        speed = speed * -1
 
     slider_x.value = player.x
     slider_y.value = player.y
     slider_z.value = player.z
+
+
+speed = 1
 
 
 def input(key):
@@ -232,9 +282,10 @@ def input(key):
             if key == 'left mouse down':
                 boxes.remove(box)
                 destroy(box)
-                p = ParticleSystem(position=Vec2(box.position, mouse.normal),
+                p = ParticleSystem(position=Vec3(random.randint(1, map_size), 1, random.randint(1, map_size)),
                                    color=color.green, rotation_y=random.random() * 360)
                 p.fade_out(duration=.2, delay=1 - .2, curve=curve.linear)
+                break_grass.play()
 
     if held_keys['tab']:
         if camera.z == -5:
@@ -249,15 +300,26 @@ def input(key):
         hand.position = (0.45, -0.5)
     else:
         hand.position = (0.5, -0.6)
+
+    # Chat
+
     if held_keys['t']:
         chat_input.visible = True
     if held_keys['enter']:
         print(chat_input.text)
         time.sleep(0.5)
+        voice_robot.say(chat_input.text)
+        voice_robot.runAndWait()
         if chat_input.text == '("forme":"sphere")':
             print("true")
         else:
-            txt_chat_info.text = 'Error'
+            chat_input.text = ''
+    if key == 'tab':
+        # application.paused = not application.paused
+        if application.time_scale == 1:
+            application.time_scale = .3
+        else:
+            application.time_scale = 1
 
     # save map with code
 
@@ -268,9 +330,10 @@ def input(key):
     # admin option
 
     if held_keys['l']:
+
         print(boxes)
         print(bedrock)
-        player.cursor.enabled = True
+        player.cursor.enabled = False
         wp = WindowPanel(
             title='Admin Window',
             content=(
@@ -279,10 +342,18 @@ def input(key):
                 Text('Password:'),
                 InputField(name='admin_password'),
                 Button(text='Submit', color=color.azure),
-                ButtonGroup(('test', 'reload', 'quit'))
+                ButtonGroup(('reload', 'quit'))
             ),
         )
         wp.y = wp.panel.scale_y / 2 * wp.scale_y
+
+        window = Tk()
+        window.geometry('250x120')
+        window.config(bg='black')
+
+        label = Label(window, text = "Nombre de message: ", bg='black', fg='green').place(x = 20, y = 50)
+
+        window.mainloop()
 
 
 app.run()

@@ -17,7 +17,7 @@ window.borderless = False
 window.exit_button.enabled = False
 
 Sky()
-player = FirstPersonController(has_pickup=False)
+player = FirstPersonController()
 player.cursor.enabled = True
 
 
@@ -57,7 +57,7 @@ for n in range(map_size):
 def tree():
     for n in range(3):
         global x
-        x= int(randint(1, map_size))
+        x = int(randint(1, map_size))
         global z
         z = int(randint(1, map_size))
         for t in range(5):
@@ -202,16 +202,16 @@ class Medkit(Entity):
 
             def medrespawn():
                 global meds
-                meds = [Medkit(x=2 * 2) in range(1)]
+                meds = [Medkit(x=randint(0, map_size)) in range(1)]
 
             invoke(medrespawn, delay=10)
 
 
-meds = [Medkit(x=2*2) in range(1)]
+meds = [Medkit(x=randint(0, map_size)) in range(1)]
 
-number_of_particles = 1000   # keep this as low as possible
-points = np.array([Vec3(0, 0, 0) for i in range(number_of_particles)])
-directions = np.array([Vec3(random.random()-.5, random.random()-.5, random.random()-.5)*.05 for i in range(number_of_particles)])
+nmb_particles = 1000   # keep this as low as possible
+points = np.array([Vec3(0, 0, 0) for i in range(nmb_particles)])
+directions = np.array([Vec3(random.random()-.5, random.random()-.5, random.random()-.5)*.05 for i in range(nmb_particles)])
 frames = []
 
 # simulate the particles once and cache the positions in a list.
@@ -239,7 +239,7 @@ class ParticleSystem(Entity):
 
 def update():
     if player.y == -10 or player.y < -10:
-        txt_dead = Text(text='Your are dead', scale=4, color='#fc0000', x=-.40, y=0)
+        print_on_screen(text='You are dead', position=(0, 0), origin=(0, 0), scale=4, duration=2)
         dead_punch.play()
         player.y = 1
         player.x = randint(0, map_size)
@@ -254,9 +254,9 @@ def update():
     if abs(pickup.x) > map_size:
         speed = speed * -1
 
-    text_x.text = f"X: {player.x}"
-    text_y.text = f"Y: {player.y}"
-    text_z.text = f"Z:  {player.z}"
+    text_x.text = f"X: {round(player.x)}"
+    text_y.text = f"Y: {round(player.y)}"
+    text_z.text = f"Z:  {round(player.z)}"
 
 
 speed = 1
@@ -313,17 +313,17 @@ def input(key):
             print("true")
         else:
             chat_input.text = ''
-    if key == 'tab':
+    if key == 'p':
         # application.paused = not application.paused
-        if application.time_scale == 1:
-            application.time_scale = .3
+        if not application.pause():
+            application.pause()
         else:
-            application.time_scale = 1
+            application.pause = False
 
     # save map with code
 
     if held_keys['c']:
-        code = map_size + x + z
+        code = {map_size, x, z}
         txt_save_code.text = f"{code}"
 
     # admin option
@@ -345,14 +345,6 @@ def input(key):
             ),
         )
         wp.y = wp.panel.scale_y / 2 * wp.scale_y
-
-        window = Tk()
-        window.geometry('250x120')
-        window.config(bg='black')
-
-        label = Label(window, text = "Nombre de message: ", bg='black', fg='green').place(x = 20, y = 50)
-
-        window.mainloop()
 
 
 app.run()
